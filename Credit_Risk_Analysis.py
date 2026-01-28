@@ -6,8 +6,7 @@ import seaborn as sns
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_auc_score, confusion_matrix, classification_report, roc_curve
 
-# 1. DATA SIMULATION (Mimicking Real Fintech Data)
-# Moneyview looks at Income, Debt-to-Income (DTI), and employment tenure.
+# 1. DATA SIMULATION (Aligned with README "Alternative Data" Focus)
 np.random.seed(42)
 n_samples = 5000
 
@@ -22,36 +21,39 @@ data = {
 
 df = pd.DataFrame(data)
 
-# Create a realistic "Default" target (Target = 1 if defaulted)
-# Default probability increases with higher DTI and lower Bureau Score
+# 2. TARGET MAPPING (Logic: Map Default/Charged-Off to 1)
+# Default probability modeled as a function of DTI and low Bureau Scores
 logit = (0.05 * df['dti_ratio']) - (0.01 * df['bureau_score']) + (0.5 * df['inquiries_last_6m']) + 4
 prob = 1 / (1 + np.exp(-logit))
-df['default'] = (prob > np.percentile(prob, 85)).astype(int) # 15% default rate
+df['default'] = (prob > np.percentile(prob, 85)).astype(int) # Simulated 15% default rate
 
-# 2. FEATURE ENGINEERING (The "Fintech" Twist)
-# Creating 'Alternative' metrics
+# 3. FEATURE ENGINEERING (Fintech-specific "Alternative" Metrics)
+# Repayment capacity: how much of monthly income goes to the loan?
 df['installment_to_income'] = (df['loan_amount'] / 12) / (df['annual_income'] / 12)
-df['risk_score_custom'] = df['bureau_score'] * (1 - (df['dti_ratio']/100))
 
-# 3. TRAIN-TEST SPLIT
+# Custom Risk Score: Blending traditional score with DTI health
+df['custom_risk_score'] = df['bureau_score'] * (1 - (df['dti_ratio']/100))
+
+# 4. TRAIN-TEST SPLIT
 X = df.drop('default', axis=1)
 y = df['default']
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# 4. MODELING (XGBoost - Moneyview's JD requirement)
-# We use scale_pos_weight to handle imbalanced default classes
+# 5. MODELING (Using Regularized XGBoost as per README)
+# scale_pos_weight is the ratio of negative to positive samples (approx 5:1)
 model = xgb.XGBClassifier(
     n_estimators=100,
     max_depth=5,
     learning_rate=0.1,
-    scale_pos_weight=5, # Crucial for 15% default rate
+    scale_pos_weight=5.6, # Specifically handles the 15% imbalanced default rate
     objective='binary:logistic',
-    random_state=42
+    random_state=42,
+    eval_metric='logloss'
 )
 
 model.fit(X_train, y_train)
 
-# 5. EVALUATION & RESULTS
+# 6. EVALUATION & RESULTS
 y_pred_proba = model.predict_proba(X_test)[:, 1]
 y_pred = model.predict(X_test)
 
@@ -59,18 +61,21 @@ auc = roc_auc_score(y_test, y_pred_proba)
 print(f"Model AUC-ROC Performance: {auc:.2f}")
 print("\nClassification Report:\n", classification_report(y_test, y_pred))
 
-# 6. VISUALIZING RISK DRIVERS (Data Storytelling)
+# 7. VISUALIZING RISK DRIVERS (Data Storytelling for Recruiters)
+
 plt.figure(figsize=(10, 6))
-xgb.plot_importance(model, importance_type='gain', ax=plt.gca())
-plt.title("Key Risk Drivers for Moneyview Loans (Feature Importance)")
+xgb.plot_importance(model, importance_type='gain', ax=plt.gca(), color='skyblue')
+plt.title("Key Risk Drivers: Feature Importance (Gain)")
 plt.show()
 
-# 7. ROC CURVE
+# 8. ROC CURVE (Visualizing Discriminative Power)
+
 fpr, tpr, _ = roc_curve(y_test, y_pred_proba)
-plt.plot(fpr, tpr, label=f'XGBoost (AUC = {auc:.2f})')
-plt.plot([0, 1], [0, 1], 'k--')
+plt.plot(fpr, tpr, label=f'XGBoost Classifier (AUC = {auc:.2f})', color='darkorange', lw=2)
+plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
 plt.xlabel('False Positive Rate')
 plt.ylabel('True Positive Rate (Sensitivity)')
-plt.title('Receiver Operating Characteristic (ROC) Curve')
-plt.legend()
+plt.title('Credit Risk Model - ROC Curve')
+plt.legend(loc="lower right")
+plt.grid(alpha=0.3)
 plt.show()
