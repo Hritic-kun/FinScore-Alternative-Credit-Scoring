@@ -3,7 +3,7 @@
 ## 📌 Project Overview
 Traditional credit scoring relies heavily on Bureau scores, often excluding "new-to-credit" or "thin-file" segments. This project develops a **Fintech-focused Credit Risk Model** that incorporates alternative data points—such as debt-to-income (DTI) ratios, employment stability, and inquiry frequency—to predict the Probability of Default ($PD$).
 
-This framework is designed to mimic the assessment logic used by leading digital lenders like **Moneyview** to provide personal loans to underserved segments.
+This framework is designed to mimic the assessment logic used by leading digital lenders like credit provider company to provide personal loans to underserved segments.
 
 ## 📊 Dataset & Reference Sources
 The analysis utilizes a high-fidelity synthetic dataset modeled after the **LendingClub Open Data** and **DLAI (Digital Lenders Association of India)** industry benchmarks.
