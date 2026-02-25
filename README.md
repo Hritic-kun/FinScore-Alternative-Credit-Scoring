@@ -6,7 +6,7 @@ Traditional credit scoring relies heavily on   scores, often excluding "new-to-c
 This framework is designed to mimic the assessment logic used by leading digital lenders like credit provider company to provide personal loans to underserved segments.
 
 ## 📊 Dataset & Reference Sources
-The analysis utilizes a high-fidelity synthetic dataset modeled after the **LendingClub Open Data** and **DLAI (Digital Lenders Association of India)** industry benchmarks.
+The analysis utilizes a high-fidelity synthetic dataset modeled after the  industry benchmarks.
 * **Target Segments:** Unsecured personal loans up to ₹10L.
 * **Key Features:** Income stability, Credit utilization, DTI, and   score.
 
