@@ -15,15 +15,15 @@ data = {
     'dti_ratio': np.random.uniform(10, 50, n_samples),           # Debt-to-Income
     'emp_length_years': np.random.randint(1, 15, n_samples),
     'inquiries_last_6m': np.random.poisson(1, n_samples),
-    'bureau_score': np.random.normal(700, 50, n_samples),        # Traditional score
+    'score': np.random.normal(700, 50, n_samples),        # Traditional score
     'loan_amount': np.random.uniform(50000, 500000, n_samples)
 }
 
 df = pd.DataFrame(data)
 
 # 2. TARGET MAPPING (Logic: Map Default/Charged-Off to 1)
-# Default probability modeled as a function of DTI and low Bureau Scores
-logit = (0.05 * df['dti_ratio']) - (0.01 * df['bureau_score']) + (0.5 * df['inquiries_last_6m']) + 4
+# Default probability modeled as a function of DTI and low Scores
+logit = (0.05 * df['dti_ratio']) - (0.01 * df['score']) + (0.5 * df['inquiries_last_6m']) + 4
 prob = 1 / (1 + np.exp(-logit))
 df['default'] = (prob > np.percentile(prob, 85)).astype(int) # Simulated 15% default rate
 
@@ -32,7 +32,7 @@ df['default'] = (prob > np.percentile(prob, 85)).astype(int) # Simulated 15% def
 df['installment_to_income'] = (df['loan_amount'] / 12) / (df['annual_income'] / 12)
 
 # Custom Risk Score: Blending traditional score with DTI health
-df['custom_risk_score'] = df['bureau_score'] * (1 - (df['dti_ratio']/100))
+df['custom_risk_score'] = df['score'] * (1 - (df['dti_ratio']/100))
 
 # 4. TRAIN-TEST SPLIT
 X = df.drop('default', axis=1)
